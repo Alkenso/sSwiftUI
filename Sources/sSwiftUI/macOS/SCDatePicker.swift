@@ -43,55 +43,14 @@ public struct SCDatePicker: View {
     public var minDate: Date?
     public var maxDate: Date?
     
-    public init(
-        style: NSDatePicker.Style,
-        elements: NSDatePicker.ElementFlags,
-        selection: Binding<ClosedRange<Date>>,
-        roundToDayBoundaries: Bool = false,
-        minDate: Date? = nil,
-        maxDate: Date? = nil,
-        calendar: Calendar? = nil,
-        locale: Locale? = nil,
-        timeZone: TimeZone? = nil,
-        isBezeled: Bool? = nil,
-        isBordered: Bool? = nil,
-        drawsBackground: Bool? = nil,
-        backgroundColor: NSColor? = nil,
-        textColor: NSColor? = nil
-    ) {
+    public init(style: NSDatePicker.Style, elements: NSDatePicker.ElementFlags, selection: Binding<ClosedRange<Date>>) {
         self.datePickerStyle = style
         self.datePickerElements = elements
         self.datePickerMode = .range
         self._selection = selection
-        self.roundToDayBoundaries = roundToDayBoundaries
-        self.minDate = minDate
-        self.maxDate = maxDate
-        self.calendar = calendar
-        self.locale = locale
-        self.timeZone = timeZone
-        self.isBezeled = isBezeled
-        self.isBordered = isBordered
-        self.drawsBackground = drawsBackground
-        self.backgroundColor = backgroundColor
-        self.textColor = textColor
     }
     
-    public init(
-        style: NSDatePicker.Style,
-        elements: NSDatePicker.ElementFlags,
-        selection: Binding<Date>,
-        roundToDayBoundaries: Bool = false,
-        minDate: Date? = nil,
-        maxDate: Date? = nil,
-        calendar: Calendar? = nil,
-        locale: Locale? = nil,
-        timeZone: TimeZone? = nil,
-        isBezeled: Bool? = nil,
-        isBordered: Bool? = nil,
-        drawsBackground: Bool? = nil,
-        backgroundColor: NSColor? = nil,
-        textColor: NSColor? = nil
-    ) {
+    public init(style: NSDatePicker.Style, elements: NSDatePicker.ElementFlags, selection: Binding<Date>) {
         self.datePickerStyle = style
         self.datePickerElements = elements
         self.datePickerMode = .single
@@ -99,23 +58,14 @@ public struct SCDatePicker: View {
             get: { selection.wrappedValue...selection.wrappedValue },
             set: { selection.wrappedValue = $0.lowerBound }
         )
-        self.roundToDayBoundaries = roundToDayBoundaries
-        self.minDate = minDate
-        self.maxDate = maxDate
-        self.calendar = calendar
-        self.locale = locale
-        self.timeZone = timeZone
-        self.isBezeled = isBezeled
-        self.isBordered = isBordered
-        self.drawsBackground = drawsBackground
-        self.backgroundColor = backgroundColor
-        self.textColor = textColor
     }
     
     public var body: some View {
         _SCDatePicker(rep: self)
     }
 }
+
+extension SCDatePicker: ObjectBuilder {}
 
 private struct _SCDatePicker: NSViewRepresentable {
     let rep: SCDatePicker

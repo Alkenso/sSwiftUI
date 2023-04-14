@@ -31,16 +31,19 @@ public struct SCTableView<T: Identifiable>: View {
     public let columns: [SCTableViewColumn<T>]
     public var contextMenu: [SCTableViewContextMenu] = []
     
-    // In-Out
+    // In-Out:
     public var selection: Binding<Set<T.ID>>?
     
-    // Out
+    // Out:
     public var onDoubleClick: ((Int) -> Void)?
-    public var onSort: (([SCSortComparator<T>]) -> Void)?
+    // Setting `onSort` property through ObjectBuilder triggers known Swift bug
+    // and cause crash in runtime.
+    public let onSort: (([SCSortComparator<T>]) -> Void)?
     
-    // In
+    // In:
     public var scrollTo: Binding<T.ID?> = .constant(nil)
     
+    // Properties:
     public var allowsMultipleSelection = true
     public var allowsEmptySelection = true
     public var allowsColumnSelection = false
@@ -48,40 +51,18 @@ public struct SCTableView<T: Identifiable>: View {
     public var allowsColumnResizing = true
     public var columnAutoresizingStyle: NSTableView.ColumnAutoresizingStyle = .uniformColumnAutoresizingStyle
     
-    public init(
-        items: [T],
-        columns: [SCTableViewColumn<T>],
-        contextMenu: [SCTableViewContextMenu] = [],
-        selection: Binding<Set<T.ID>>? = nil,
-        onDoubleClick: ((Int) -> Void)? = nil,
-        onSort: (([SCSortComparator<T>]) -> Void)? = nil,
-        scrollTo: Binding<T.ID?> = .constant(nil),
-        allowsMultipleSelection: Bool = true,
-        allowsEmptySelection: Bool = true,
-        allowsColumnSelection: Bool = false,
-        allowsColumnReordering: Bool = true,
-        allowsColumnResizing: Bool = true,
-        columnAutoresizingStyle: NSTableView.ColumnAutoresizingStyle = .uniformColumnAutoresizingStyle
-    ) {
+    public init(items: [T], columns: [SCTableViewColumn<T>], onSort: (([SCSortComparator<T>]) -> Void)? = nil) {
         self.items = items
         self.columns = columns
-        self.contextMenu = contextMenu
-        self.selection = selection
-        self.onDoubleClick = onDoubleClick
         self.onSort = onSort
-        self.scrollTo = scrollTo
-        self.allowsMultipleSelection = allowsMultipleSelection
-        self.allowsEmptySelection = allowsEmptySelection
-        self.allowsColumnSelection = allowsColumnSelection
-        self.allowsColumnReordering = allowsColumnReordering
-        self.allowsColumnResizing = allowsColumnResizing
-        self.columnAutoresizingStyle = columnAutoresizingStyle
     }
     
     public var body: some View {
         _SCTableView(rep: self)
     }
 }
+
+extension SCTableView: ObjectBuilder {}
 
 public struct SCTableViewColumn<T> {
     fileprivate let id = UUID()
@@ -91,9 +72,8 @@ public struct SCTableViewColumn<T> {
     public var sortComparator: SCSortComparator<T>?
     public let view: (T) -> AnyView
     
-    public init<Content: View>(_ title: String, width: Width? = nil, sortComparator: SCSortComparator<T>? = nil, @ViewBuilder view: @escaping (T) -> Content) {
+    public init<Content: View>(_ title: String, @ViewBuilder view: @escaping (T) -> Content) {
         self.title = title
-        self.sortComparator = sortComparator
         self.view = { AnyView(view($0).frame(maxWidth: .infinity)) }
     }
     
@@ -111,9 +91,11 @@ public struct SCTableViewColumn<T> {
     }
 }
 
+extension SCTableViewColumn: ObjectBuilder {}
+
 extension SCTableViewColumn {
-    public init<S: StringProtocol>(_ title: String, width: Width? = nil, sortComparator: SCSortComparator<T>? = nil, text: @escaping (T) -> S) {
-        self.init(title, width: width, sortComparator: sortComparator) {
+    public init<S: StringProtocol>(_ title: String, text: @escaping (T) -> S) {
+        self.init(title) {
             Text(text($0))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .lineLimit(1)
@@ -337,17 +319,19 @@ struct SCTableView_Previews: PreviewProvider {
                 SCTableView(
                     items: items,
                     columns: [
-                        .init("Name", width: 150, sortComparator: .keyPath(\.name)) { $0.name },
+                        .init("Name") { $0.name }
+                            .set(\.width, 159)
+                            .set(\.sortComparator, .keyPath(\.name)),
                         .init("Code") { String($0.code) },
                     ],
-                    selection: $selection,
-                    onDoubleClick: { lastAction = "Double click on \($0)" },
                     onSort: {
                         guard let pred = $0.first else { return }
                         items.sort(by: pred.compare)
-                    },
-                    columnAutoresizingStyle: .uniformColumnAutoresizingStyle
+                    }
                 )
+                .set(\.selection, $selection)
+                .set(\.onDoubleClick, { lastAction = "Double click on \($0)" })
+                .set(\.columnAutoresizingStyle, .uniformColumnAutoresizingStyle)
             }
             .padding()
         }
