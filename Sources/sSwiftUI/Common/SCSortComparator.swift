@@ -54,4 +54,19 @@ extension SCSortComparator {
     public static func keyPath<U: Comparable>(_ keyPath: KeyPath<T, U>, ascending: Bool = true) -> SCSortComparator<T> {
         .keyPath(keyPath, ascending: ascending) { $0 < $1 }
     }
+    
+    public static func optionalKeyPath<U: Comparable>(_ keyPath: KeyPath<T, U?>, ascending: Bool = true, lessThanNil: Bool = true) -> SCSortComparator<T> {
+        .keyPath(keyPath, ascending: ascending) {
+            switch ($0, $1) {
+            case (.some(let lhs), .some(let rhs)):
+                return lhs < rhs
+            case (.some, .none):
+                return lessThanNil
+            case (.none, .some):
+                return !lessThanNil
+            case (.none, .none):
+                return false
+            }
+        }
+    }
 }
