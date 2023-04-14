@@ -26,10 +26,10 @@ import Cocoa
 import SwiftConvenience
 import SwiftUI
 
-public struct SCTableView<T: Identifiable>: View {
+public struct SCTable<T: Identifiable>: View {
     public let items: [T]
-    public let columns: [SCTableViewColumn<T>]
-    public var contextMenu: [SCTableViewContextMenu] = []
+    public let columns: [SCTableColumn<T>]
+    public var contextMenu: [SCTableContextMenu] = []
     
     // In-Out:
     public var selection: Binding<Set<T.ID>>?
@@ -51,20 +51,20 @@ public struct SCTableView<T: Identifiable>: View {
     public var allowsColumnResizing = true
     public var columnAutoresizingStyle: NSTableView.ColumnAutoresizingStyle = .uniformColumnAutoresizingStyle
     
-    public init(items: [T], columns: [SCTableViewColumn<T>], onSort: (([SCSortComparator<T>]) -> Void)? = nil) {
+    public init(items: [T], columns: [SCTableColumn<T>], onSort: (([SCSortComparator<T>]) -> Void)? = nil) {
         self.items = items
         self.columns = columns
         self.onSort = onSort
     }
     
     public var body: some View {
-        _SCTableView(rep: self)
+        SCTableImpl(rep: self)
     }
 }
 
-extension SCTableView: ObjectBuilder {}
+extension SCTable: ObjectBuilder {}
 
-public struct SCTableViewColumn<T> {
+public struct SCTableColumn<T> {
     fileprivate let id = UUID()
     
     public var title: String
@@ -91,9 +91,9 @@ public struct SCTableViewColumn<T> {
     }
 }
 
-extension SCTableViewColumn: ObjectBuilder {}
+extension SCTableColumn: ObjectBuilder {}
 
-extension SCTableViewColumn {
+extension SCTableColumn {
     public init<S: StringProtocol>(_ title: String, text: @escaping (T) -> S) {
         self.init(title) {
             Text(text($0))
@@ -104,21 +104,21 @@ extension SCTableViewColumn {
     }
 }
 
-public enum SCTableViewContextMenu {
+public enum SCTableContextMenu {
     case item(_ title: String, _ action: (Int, IndexSet) -> Void)
     case separator
 }
 
-private struct _SCTableView<T: Identifiable>: NSViewRepresentable {
-    let rep: SCTableView<T>
+private struct SCTableImpl<T: Identifiable>: NSViewRepresentable {
+    let rep: SCTable<T>
     
-    func makeNSView(context: Context) -> SCNSTableView<T> {
-        let ns = SCNSTableView<T>(columns: rep.columns, contextMenu: rep.contextMenu)
+    func makeNSView(context: Context) -> SCTableView<T> {
+        let ns = SCTableView<T>(columns: rep.columns, contextMenu: rep.contextMenu)
         updateNSView(ns, context: context)
         return ns
     }
     
-    func updateNSView(_ nsView: SCNSTableView<T>, context: Context) {
+    func updateNSView(_ nsView: SCTableView<T>, context: Context) {
         nsView.items = rep.items
         nsView.selection = rep.selection
         nsView.reload()
@@ -140,9 +140,9 @@ private struct _SCTableView<T: Identifiable>: NSViewRepresentable {
     }
 }
 
-private class SCNSTableView<T: Identifiable>: NSView, NSTableViewDelegate, NSTableViewDataSource, ObjectBuilder {
-    private let columns: [SCTableViewColumn<T>]
-    private let contextMenu: [KeyValue<NSMenuItem, SCTableViewContextMenu>]
+private class SCTableView<T: Identifiable>: NSView, NSTableViewDelegate, NSTableViewDataSource, ObjectBuilder {
+    private let columns: [SCTableColumn<T>]
+    private let contextMenu: [KeyValue<NSMenuItem, SCTableContextMenu>]
     private var tableView: NSTableView!
     
     var onDoubleClick: ((Int) -> Void)?
@@ -162,7 +162,7 @@ private class SCNSTableView<T: Identifiable>: NSView, NSTableViewDelegate, NSTab
     var columnAutoresizingStyle: NSTableView.ColumnAutoresizingStyle = .uniformColumnAutoresizingStyle
     { didSet { tableView?.columnAutoresizingStyle = columnAutoresizingStyle } }
     
-    init(columns: [SCTableViewColumn<T>], contextMenu: [SCTableViewContextMenu] = []) {
+    init(columns: [SCTableColumn<T>], contextMenu: [SCTableContextMenu] = []) {
         self.columns = columns
         self.contextMenu = contextMenu.map {
             let menuItem: NSMenuItem
@@ -316,7 +316,7 @@ struct SCTableView_Previews: PreviewProvider {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Text("Selected: \(selection.count)")
                     .frame(maxWidth: .infinity, alignment: .leading)
-                SCTableView(
+                SCTable(
                     items: items,
                     columns: [
                         .init("Name") { $0.name }
