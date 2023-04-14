@@ -42,8 +42,20 @@ extension SCSortComparator {
     public init(ascending: Bool = true) where T: Comparable {
         self = .keyPath(\.self, ascending: ascending)
     }
+    
+    public static func optional<U>(ascending: Bool = true, lessThanNil: Bool = true, isLess: @escaping (U, U) -> Bool) -> SCSortComparator<T> where T == U? {
+        .init(ascending: ascending) {
+            compareOptionals(lessThanNil: lessThanNil, $0, $1, isLess: isLess)
+        }
+    }
+    
+    public static func optional<U: Comparable>(ascending: Bool = true, lessThanNil: Bool = true) -> SCSortComparator<T> where T == U? {
+        .init(ascending: ascending) {
+            compareOptionals(lessThanNil: lessThanNil, $0, $1, isLess: { $0 < $1 })
+        }
+    }
 }
-
+    
 extension SCSortComparator {
     public static func keyPath<U>(_ keyPath: KeyPath<T, U>, ascending: Bool = true, isLess: @escaping (U, U) -> Bool) -> SCSortComparator<T> {
         .init(ascending: ascending) {
@@ -52,21 +64,30 @@ extension SCSortComparator {
     }
     
     public static func keyPath<U: Comparable>(_ keyPath: KeyPath<T, U>, ascending: Bool = true) -> SCSortComparator<T> {
-        .keyPath(keyPath, ascending: ascending) { $0 < $1 }
+        .keyPath(keyPath, ascending: ascending, isLess: { $0 < $1 })
     }
     
-    public static func optionalKeyPath<U: Comparable>(_ keyPath: KeyPath<T, U?>, ascending: Bool = true, lessThanNil: Bool = true) -> SCSortComparator<T> {
+    public static func optional<U>(_ keyPath: KeyPath<T, U?>, ascending: Bool = true, lessThanNil: Bool = true, isLess: @escaping (U, U) -> Bool) -> SCSortComparator<T> {
         .keyPath(keyPath, ascending: ascending) {
-            switch ($0, $1) {
-            case (.some(let lhs), .some(let rhs)):
-                return lhs < rhs
-            case (.some, .none):
-                return lessThanNil
-            case (.none, .some):
-                return !lessThanNil
-            case (.none, .none):
-                return false
-            }
+            compareOptionals(lessThanNil: lessThanNil, $0, $1, isLess: isLess)
         }
+    }
+    
+    public static func optional<U: Comparable>(_ keyPath: KeyPath<T, U?>, ascending: Bool = true, lessThanNil: Bool = true) -> SCSortComparator<T> {
+        .optional(keyPath, ascending: ascending, lessThanNil: lessThanNil) { $0 < $1 }
+    }
+}
+
+@inline(__always)
+private func compareOptionals<T>(lessThanNil: Bool, _ lhs: T?, _ rhs: T?, isLess: (T, T) -> Bool) -> Bool {
+    switch (lhs, rhs) {
+    case (.some(let lhs), .some(let rhs)):
+        return isLess(lhs, rhs)
+    case (.some, .none):
+        return lessThanNil
+    case (.none, .some):
+        return !lessThanNil
+    case (.none, .none):
+        return false
     }
 }
