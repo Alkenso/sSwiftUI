@@ -62,47 +62,13 @@ public struct SCTable<T: Identifiable>: View {
     }
 }
 
+extension SCTable {
+    public init(items: [T], @SCTableColumnBuilder<T> columns: () -> [SCTableColumn<T>], onSort: (([SCSortComparator<T>]) -> Void)? = nil) {
+        self.init(items: items, columns: columns(), onSort: onSort)
+    }
+}
+
 extension SCTable: ObjectBuilder {}
-
-public struct SCTableColumn<T> {
-    fileprivate let id = UUID()
-    
-    public var title: String
-    public var width: Width?
-    public var sortComparator: SCSortComparator<T>?
-    public let view: (T) -> AnyView
-    
-    public init<Content: View>(_ title: String, @ViewBuilder view: @escaping (T) -> Content) {
-        self.title = title
-        self.view = { AnyView(view($0).frame(maxWidth: .infinity)) }
-    }
-    
-    public enum Width: ExpressibleByFloatLiteral, ExpressibleByIntegerLiteral {
-        case fixed(CGFloat)
-        case flexible(min: CGFloat? = nil, max: CGFloat? = nil)
-        
-        public init(floatLiteral value: FloatLiteralType) {
-            self = .fixed(value)
-        }
-        
-        public init(integerLiteral value: IntegerLiteralType) {
-            self = .fixed(CGFloat(value))
-        }
-    }
-}
-
-extension SCTableColumn: ObjectBuilder {}
-
-extension SCTableColumn {
-    public init<S: StringProtocol>(_ title: String, text: @escaping (T) -> S) {
-        self.init(title) {
-            Text(text($0))
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .lineLimit(1)
-                .truncationMode(.middle)
-        }
-    }
-}
 
 public enum SCTableContextMenu {
     case item(_ title: String, _ action: (Int, IndexSet) -> Void)
@@ -318,12 +284,12 @@ struct SCTableView_Previews: PreviewProvider {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 SCTable(
                     items: items,
-                    columns: [
-                        .init("Name") { $0.name }
+                    columns: {
+                        SCTableColumn("Name") { $0.name }
                             .set(\.width, 159)
-                            .set(\.sortComparator, .keyPath(\.name)),
-                        .init("Code") { String($0.code) },
-                    ],
+                            .set(\.sortComparator, .keyPath(\.name))
+                        SCTableColumn("Code") { String($0.code) }
+                    },
                     onSort: {
                         guard let pred = $0.first else { return }
                         items.sort(by: pred.compare)
