@@ -56,10 +56,12 @@ extension SCTableColumn: ObjectBuilder {}
 extension SCTableColumn {
     public init<S: StringProtocol>(_ title: String, text: @escaping (T) -> S) {
         self.init(title) {
-            Text(text($0))
+            let value = text($0)
+            Text(value)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .lineLimit(1)
                 .truncationMode(.middle)
+                .help(value)
         }
     }
 }
