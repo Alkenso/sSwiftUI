@@ -233,9 +233,12 @@ private class SCTableView<T: Identifiable>: NSView, NSTableViewDelegate, NSTable
     }
     
     func tableViewSelectionDidChange(_ notification: Notification) {
+        guard let selection else { return }
         guard let tableView = notification.object as? NSTableView else { return }
-        let ids = tableView.selectedRowIndexes.map { items[$0].id }
-        selection?.wrappedValue = Set(ids)
+        let ids = Set(tableView.selectedRowIndexes.map { items[$0].id })
+        if selection.wrappedValue != ids {
+            selection.wrappedValue = Set(ids)
+        }
     }
     
     func tableView(_ tableView: NSTableView, sortDescriptorsDidChange oldDescriptors: [NSSortDescriptor]) {
