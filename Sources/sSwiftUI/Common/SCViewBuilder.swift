@@ -20,7 +20,6 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //  SOFTWARE.
 
-import SwiftConvenience
 import SwiftUI
 
 extension View {
@@ -30,7 +29,7 @@ extension View {
 }
 
 @dynamicMemberLookup
-public struct SCViewBuilder<Content: View>: View, ObjectBuilder {
+public struct SCViewBuilder<Content: View>: View {
     public var body: Content
     
     public init(body: Content) {
@@ -40,5 +39,32 @@ public struct SCViewBuilder<Content: View>: View, ObjectBuilder {
     public subscript<T>(dynamicMember keyPath: WritableKeyPath<Content, T>) -> T {
         get { body[keyPath: keyPath] }
         set { body[keyPath: keyPath] = newValue }
+    }
+}
+
+extension SCViewBuilder {
+    public func set<T>(_ keyPath: WritableKeyPath<Self, T>, _ value: T?) -> Self {
+        guard let value = value else { return self }
+        var copy = self
+        copy[keyPath: keyPath] = value
+        return copy
+    }
+    
+    @ViewBuilder
+    public func `if`<R: View>(_ condition: Bool, @ViewBuilder body: (Self) -> R) -> some View {
+        if condition {
+            body(self)
+        } else {
+            self
+        }
+    }
+    
+    @ViewBuilder
+    public func ifLet<T, R: View>(_ value: T?, body: (Self, T) -> R) -> some View {
+        if let value = value {
+            body(self, value)
+        } else {
+            self
+        }
     }
 }
