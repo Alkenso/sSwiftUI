@@ -27,8 +27,8 @@ import SwiftConvenience
 import SwiftUI
 
 public struct SCTable<T: Identifiable>: View {
-    public let items: [T]
-    public let columns: [SCTableColumn<T>]
+    fileprivate let items: Items
+    fileprivate let columns: [SCTableColumn<T>]
     public var contextMenu: [SCTableContextMenu] = []
     
     // In-Out:
@@ -52,7 +52,13 @@ public struct SCTable<T: Identifiable>: View {
     public var columnAutoresizingStyle: NSTableView.ColumnAutoresizingStyle = .uniformColumnAutoresizingStyle
     
     public init(items: [T], columns: [SCTableColumn<T>], onSort: (([SCSortComparator<T>]) -> Void)? = nil) {
-        self.items = items
+        self.items = .direct(items)
+        self.columns = columns
+        self.onSort = onSort
+    }
+    
+    public init(items: [T.ID], provider: @escaping (T.ID) -> T?, columns: [SCTableColumn<T>], onSort: (([SCSortComparator<T>]) -> Void)? = nil) {
+        self.items = .reference(items, provider)
         self.columns = columns
         self.onSort = onSort
     }
@@ -63,12 +69,34 @@ public struct SCTable<T: Identifiable>: View {
 }
 
 extension SCTable {
+    public init(items: [T.ID], provider: @escaping (T.ID) -> T?, @SCTableColumnBuilder<T> columns: () -> [SCTableColumn<T>], onSort: (([SCSortComparator<T>]) -> Void)? = nil) {
+        self.init(items: items, provider: provider, columns: columns(), onSort: onSort)
+    }
+    
     public init(items: [T], @SCTableColumnBuilder<T> columns: () -> [SCTableColumn<T>], onSort: (([SCSortComparator<T>]) -> Void)? = nil) {
         self.init(items: items, columns: columns(), onSort: onSort)
     }
 }
 
 extension SCTable: ObjectBuilder {}
+
+extension SCTable {
+    fileprivate enum Items {
+        case direct([T])
+        case reference([T.ID], (T.ID) -> T?)
+    }
+}
+
+extension SCTable.Items {
+    var ids: [T.ID] {
+        switch self {
+        case .direct(let values):
+            return values.map(\.id)
+        case .reference(let values, _):
+            return values
+        }
+    }
+}
 
 public enum SCTableContextMenu {
     case item(_ title: String, _ action: (Int, IndexSet) -> Void)
@@ -150,20 +178,20 @@ private class SCTableView<T: Identifiable>: NSView, NSTableViewDelegate, NSTable
         fatalError("init(coder:) is not supported")
     }
     
-    var items: [T] = []
+    var items: SCTable<T>.Items = .direct([])
     
     func reload() {
         DispatchQueue.main.async { [self] in
             tableView?.reloadData()
             if let selectedIDs = selection?.wrappedValue {
-                let selection = items.enumerated().filter { selectedIDs.contains($0.element.id) }.map(\.offset)
+                let selection = items.ids.enumerated().filter { selectedIDs.contains($0.element) }.map(\.offset)
                 tableView.selectRowIndexes(IndexSet(selection), byExtendingSelection: false)
             }
         }
     }
     
     func scrollTo(id: T.ID) {
-        guard let row = items.firstIndex(where: { $0.id == id }) else { return }
+        guard let row = items.ids.firstIndex(where: { $0 == id }) else { return }
         tableView?.scrollRowToVisible(row)
     }
     
@@ -219,14 +247,21 @@ private class SCTableView<T: Identifiable>: NSView, NSTableViewDelegate, NSTable
     }
     
     func numberOfRows(in tableView: NSTableView) -> Int {
-        return items.count
+        return items.ids.count
     }
 
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         guard let columnID = tableColumn.flatMap({ UUID(uuidString: $0.identifier.rawValue) }) else { return nil }
         guard let column = columns.first(where: { $0.id == columnID }) else { return nil }
         
-        let item = items[row]
+        let item: T?
+        switch items {
+        case .direct(let values):
+            item = values[row]
+        case .reference(let values, let access):
+            item = access(values[row])
+        }
+        guard let item else { return nil }
         let view = NSHostingView(rootView: column.view(item))
         
         return view
@@ -235,7 +270,7 @@ private class SCTableView<T: Identifiable>: NSView, NSTableViewDelegate, NSTable
     func tableViewSelectionDidChange(_ notification: Notification) {
         guard let selection else { return }
         guard let tableView = notification.object as? NSTableView else { return }
-        let ids = Set(tableView.selectedRowIndexes.map { items[$0].id })
+        let ids = Set(tableView.selectedRowIndexes.map { items.ids[$0] })
         if selection.wrappedValue != ids {
             selection.wrappedValue = Set(ids)
         }
@@ -286,7 +321,8 @@ struct SCTableView_Previews: PreviewProvider {
                 Text("Selected: \(selection.count)")
                     .frame(maxWidth: .infinity, alignment: .leading)
                 SCTable(
-                    items: items,
+                    items: items.map(\.id),
+                    provider: { id in  items.first { $0.id == id } },
                     columns: {
                         SCTableColumn("Name") { $0.name }
                             .set(\.width, 159)
