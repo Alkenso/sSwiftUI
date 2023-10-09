@@ -25,16 +25,14 @@
 import AppKit
 
 extension NSWindow {
-    public var scAnimator: SCNSWindowAnimator { .init(window: self) }
+    public var scAnimator: SCProxy { .init(window: self) }
+    
+    public struct SCProxy {
+        fileprivate let window: NSWindow
+    }
 }
 
-public class SCNSWindowAnimator {
-    private let window: NSWindow
-    
-    public init(window: NSWindow) {
-        self.window = window
-    }
-    
+extension NSWindow.SCProxy {
     public func shake(number: Int = 3, duration: Double = 0.4, vigour: CGFloat = 0.04) {
         let frame = window.frame
         
@@ -54,6 +52,38 @@ public class SCNSWindowAnimator {
         window.animations = ["frameOrigin": shakeAnimation]
         window.animator().setFrameOrigin(frame.origin)
         window.animations = animationsBackup
+    }
+}
+
+extension NSImage {
+    public var sc: SCProxy { .init(image: self) }
+    
+    public struct SCProxy {
+        fileprivate let image: NSImage
+    }
+}
+    
+extension NSImage.SCProxy {
+    public func imageWithInsets(inset: CGFloat, absolute: Bool) -> NSImage {
+        imageWithInsets(size: CGSize(width: inset, height: inset), absolute: absolute)
+    }
+    
+    public func imageWithInsets(size: CGSize, absolute: Bool) -> NSImage {
+        NSImage(size: image.size, flipped: false) { [image] rect in
+            var targetSize = rect.size
+            if absolute {
+                targetSize.width += size.width
+                targetSize.height += size.height
+            } else {
+                targetSize.width *= size.width
+                targetSize.height *= size.height
+            }
+            
+            let targetRect = CGRect(origin: .zero, size: targetSize).centered(against: rect)
+            image.draw(in: targetRect, from: CGRect(origin: .zero, size: image.size), operation: .copy, fraction: 1.0)
+            
+            return true
+        }
     }
 }
 
