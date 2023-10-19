@@ -22,7 +22,7 @@
 
 #if os(macOS)
 
-import SwiftConvenience
+import SpellbookFoundation
 import SwiftUI
 
 public struct SCDatePicker: View {

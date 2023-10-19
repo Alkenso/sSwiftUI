@@ -14,16 +14,13 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/Alkenso/SwiftConvenience.git", from: "0.0.23"),
+        .package(url: "https://github.com/Alkenso/SwiftSpellbook.git", exact: "0.3.0"),
     ],
     targets: [
         .target(
             name: "sSwiftUI",
-            dependencies: ["SwiftConvenience"],
+            dependencies: [.product(name: "SpellbookFoundation", package: "SwiftSpellbook")],
             linkerSettings: [.linkedFramework("SwiftUI")]
-        ),
-        .testTarget(
-            name: "sSwiftUITests",
-            dependencies: ["sSwiftUI"]),
+        )
     ]
 )

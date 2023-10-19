@@ -23,7 +23,7 @@
 #if os(macOS)
 
 import Cocoa
-import SwiftConvenience
+import SpellbookFoundation
 import SwiftUI
 
 public struct SCTable<T: Identifiable>: View {
