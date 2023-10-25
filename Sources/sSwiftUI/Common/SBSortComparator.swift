@@ -22,7 +22,7 @@
 
 import Foundation
 
-public struct SCSortComparator<T> {
+public struct SBSortComparator<T> {
     public var ascending: Bool
     public var isLess: (T, T) -> Bool
     
@@ -32,48 +32,48 @@ public struct SCSortComparator<T> {
     }
 }
 
-extension SCSortComparator {
+extension SBSortComparator {
     public func compare(_ lhs: T, _ rhs: T) -> Bool {
         isLess(lhs, rhs) == ascending
     }
 }
 
-extension SCSortComparator {
+extension SBSortComparator {
     public init(ascending: Bool = true) where T: Comparable {
         self = .keyPath(\.self, ascending: ascending)
     }
     
-    public static func optional<U>(ascending: Bool = true, lessThanNil: Bool = true, isLess: @escaping (U, U) -> Bool) -> SCSortComparator<T> where T == U? {
+    public static func optional<U>(ascending: Bool = true, lessThanNil: Bool = true, isLess: @escaping (U, U) -> Bool) -> SBSortComparator<T> where T == U? {
         .init(ascending: ascending) {
             compareOptionals(lessThanNil: lessThanNil, $0, $1, isLess: isLess)
         }
     }
     
-    public static func optional<U: Comparable>(ascending: Bool = true, lessThanNil: Bool = true) -> SCSortComparator<T> where T == U? {
+    public static func optional<U: Comparable>(ascending: Bool = true, lessThanNil: Bool = true) -> SBSortComparator<T> where T == U? {
         .init(ascending: ascending) {
             compareOptionals(lessThanNil: lessThanNil, $0, $1, isLess: { $0 < $1 })
         }
     }
 }
     
-extension SCSortComparator {
-    public static func keyPath<U>(_ keyPath: KeyPath<T, U>, ascending: Bool = true, isLess: @escaping (U, U) -> Bool) -> SCSortComparator<T> {
+extension SBSortComparator {
+    public static func keyPath<U>(_ keyPath: KeyPath<T, U>, ascending: Bool = true, isLess: @escaping (U, U) -> Bool) -> SBSortComparator<T> {
         .init(ascending: ascending) {
             isLess($0[keyPath: keyPath], $1[keyPath: keyPath])
         }
     }
     
-    public static func keyPath<U: Comparable>(_ keyPath: KeyPath<T, U>, ascending: Bool = true) -> SCSortComparator<T> {
+    public static func keyPath<U: Comparable>(_ keyPath: KeyPath<T, U>, ascending: Bool = true) -> SBSortComparator<T> {
         .keyPath(keyPath, ascending: ascending, isLess: { $0 < $1 })
     }
     
-    public static func optional<U>(_ keyPath: KeyPath<T, U?>, ascending: Bool = true, lessThanNil: Bool = true, isLess: @escaping (U, U) -> Bool) -> SCSortComparator<T> {
+    public static func optional<U>(_ keyPath: KeyPath<T, U?>, ascending: Bool = true, lessThanNil: Bool = true, isLess: @escaping (U, U) -> Bool) -> SBSortComparator<T> {
         .keyPath(keyPath, ascending: ascending) {
             compareOptionals(lessThanNil: lessThanNil, $0, $1, isLess: isLess)
         }
     }
     
-    public static func optional<U: Comparable>(_ keyPath: KeyPath<T, U?>, ascending: Bool = true, lessThanNil: Bool = true) -> SCSortComparator<T> {
+    public static func optional<U: Comparable>(_ keyPath: KeyPath<T, U?>, ascending: Bool = true, lessThanNil: Bool = true) -> SBSortComparator<T> {
         .optional(keyPath, ascending: ascending, lessThanNil: lessThanNil) { $0 < $1 }
     }
 }

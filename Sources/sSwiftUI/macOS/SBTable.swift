@@ -26,10 +26,10 @@ import Cocoa
 import SpellbookFoundation
 import SwiftUI
 
-public struct SCTable<T: Identifiable>: View {
+public struct SBTable<T: Identifiable>: View {
     fileprivate let items: Items
-    fileprivate let columns: [SCTableColumn<T>]
-    public var contextMenu: [SCTableContextMenu] = []
+    fileprivate let columns: [SBTableColumn<T>]
+    public var contextMenu: [SBTableContextMenu] = []
     
     // In-Out:
     public var selection: Binding<Set<T.ID>>?
@@ -38,7 +38,7 @@ public struct SCTable<T: Identifiable>: View {
     public var onDoubleClick: ((Int) -> Void)?
     // Setting `onSort` property through ObjectBuilder triggers known Swift bug
     // and cause crash in runtime.
-    public let onSort: (([SCSortComparator<T>]) -> Void)?
+    public let onSort: (([SBSortComparator<T>]) -> Void)?
     
     // In:
     public var scrollTo: Binding<T.ID?> = .constant(nil)
@@ -51,43 +51,43 @@ public struct SCTable<T: Identifiable>: View {
     public var allowsColumnResizing = true
     public var columnAutoresizingStyle: NSTableView.ColumnAutoresizingStyle = .uniformColumnAutoresizingStyle
     
-    public init(items: [T], columns: [SCTableColumn<T>], onSort: (([SCSortComparator<T>]) -> Void)? = nil) {
+    public init(items: [T], columns: [SBTableColumn<T>], onSort: (([SBSortComparator<T>]) -> Void)? = nil) {
         self.items = .direct(items)
         self.columns = columns
         self.onSort = onSort
     }
     
-    public init(items: [T.ID], provider: @escaping (T.ID) -> T?, columns: [SCTableColumn<T>], onSort: (([SCSortComparator<T>]) -> Void)? = nil) {
+    public init(items: [T.ID], provider: @escaping (T.ID) -> T?, columns: [SBTableColumn<T>], onSort: (([SBSortComparator<T>]) -> Void)? = nil) {
         self.items = .reference(items, provider)
         self.columns = columns
         self.onSort = onSort
     }
     
     public var body: some View {
-        SCTableImpl(rep: self)
+        _TableImpl(rep: self)
     }
 }
 
-extension SCTable {
-    public init(items: [T.ID], provider: @escaping (T.ID) -> T?, @SCTableColumnBuilder<T> columns: () -> [SCTableColumn<T>], onSort: (([SCSortComparator<T>]) -> Void)? = nil) {
+extension SBTable {
+    public init(items: [T.ID], provider: @escaping (T.ID) -> T?, @SBTableColumnBuilder<T> columns: () -> [SBTableColumn<T>], onSort: (([SBSortComparator<T>]) -> Void)? = nil) {
         self.init(items: items, provider: provider, columns: columns(), onSort: onSort)
     }
     
-    public init(items: [T], @SCTableColumnBuilder<T> columns: () -> [SCTableColumn<T>], onSort: (([SCSortComparator<T>]) -> Void)? = nil) {
+    public init(items: [T], @SBTableColumnBuilder<T> columns: () -> [SBTableColumn<T>], onSort: (([SBSortComparator<T>]) -> Void)? = nil) {
         self.init(items: items, columns: columns(), onSort: onSort)
     }
 }
 
-extension SCTable: ObjectBuilder {}
+extension SBTable: ObjectBuilder {}
 
-extension SCTable {
+extension SBTable {
     fileprivate enum Items {
         case direct([T])
         case reference([T.ID], (T.ID) -> T?)
     }
 }
 
-extension SCTable.Items {
+extension SBTable.Items {
     var ids: [T.ID] {
         switch self {
         case .direct(let values):
@@ -98,21 +98,21 @@ extension SCTable.Items {
     }
 }
 
-public enum SCTableContextMenu {
+public enum SBTableContextMenu {
     case item(_ title: String, _ action: (Int, IndexSet) -> Void)
     case separator
 }
 
-private struct SCTableImpl<T: Identifiable>: NSViewRepresentable {
-    let rep: SCTable<T>
+private struct _TableImpl<T: Identifiable>: NSViewRepresentable {
+    let rep: SBTable<T>
     
-    func makeNSView(context: Context) -> SCTableView<T> {
-        let ns = SCTableView<T>(columns: rep.columns, contextMenu: rep.contextMenu)
+    func makeNSView(context: Context) -> _TableView<T> {
+        let ns = _TableView<T>(columns: rep.columns, contextMenu: rep.contextMenu)
         updateNSView(ns, context: context)
         return ns
     }
     
-    func updateNSView(_ nsView: SCTableView<T>, context: Context) {
+    func updateNSView(_ nsView: _TableView<T>, context: Context) {
         nsView.items = rep.items
         nsView.selection = rep.selection
         nsView.reload()
@@ -134,14 +134,14 @@ private struct SCTableImpl<T: Identifiable>: NSViewRepresentable {
     }
 }
 
-private class SCTableView<T: Identifiable>: NSView, NSTableViewDelegate, NSTableViewDataSource, ObjectBuilder {
-    private let columns: [SCTableColumn<T>]
-    private let contextMenu: [KeyValue<NSMenuItem, SCTableContextMenu>]
+private class _TableView<T: Identifiable>: NSView, NSTableViewDelegate, NSTableViewDataSource, ObjectBuilder {
+    private let columns: [SBTableColumn<T>]
+    private let contextMenu: [KeyValue<NSMenuItem, SBTableContextMenu>]
     private var tableView: NSTableView!
     
     var onDoubleClick: ((Int) -> Void)?
     var selection: Binding<Set<T.ID>>?
-    var onSort: (([SCSortComparator<T>]) -> Void)?
+    var onSort: (([SBSortComparator<T>]) -> Void)?
     
     var allowsMultipleSelection = true
     { didSet { tableView?.allowsMultipleSelection = allowsMultipleSelection } }
@@ -156,7 +156,7 @@ private class SCTableView<T: Identifiable>: NSView, NSTableViewDelegate, NSTable
     var columnAutoresizingStyle: NSTableView.ColumnAutoresizingStyle = .uniformColumnAutoresizingStyle
     { didSet { tableView?.columnAutoresizingStyle = columnAutoresizingStyle } }
     
-    init(columns: [SCTableColumn<T>], contextMenu: [SCTableContextMenu] = []) {
+    init(columns: [SBTableColumn<T>], contextMenu: [SBTableContextMenu] = []) {
         self.columns = columns
         self.contextMenu = contextMenu.map {
             let menuItem: NSMenuItem
@@ -178,7 +178,7 @@ private class SCTableView<T: Identifiable>: NSView, NSTableViewDelegate, NSTable
         fatalError("init(coder:) is not supported")
     }
     
-    var items: SCTable<T>.Items = .direct([])
+    var items: SBTable<T>.Items = .direct([])
     
     func reload() {
         DispatchQueue.main.async { [self] in
@@ -278,7 +278,7 @@ private class SCTableView<T: Identifiable>: NSView, NSTableViewDelegate, NSTable
     
     func tableView(_ tableView: NSTableView, sortDescriptorsDidChange oldDescriptors: [NSSortDescriptor]) {
         guard let onSort else { return }
-        let comparators: [SCSortComparator<T>] = tableView.sortDescriptors.compactMap {
+        let comparators: [SBSortComparator<T>] = tableView.sortDescriptors.compactMap {
             guard let key = $0.key else { return nil }
             guard let column = columns.first(where: { $0.id.uuidString == key }) else { return nil }
             guard var sortComparator = column.sortComparator else { return nil }
@@ -301,8 +301,7 @@ private class SCTableView<T: Identifiable>: NSView, NSTableViewDelegate, NSTable
     }
 }
 
-#if DEBUG
-struct SCTableView_Previews: PreviewProvider {
+#Preview {
     struct Item: Identifiable {
         let id = UUID()
         var name = "name"
@@ -320,14 +319,14 @@ struct SCTableView_Previews: PreviewProvider {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Text("Selected: \(selection.count)")
                     .frame(maxWidth: .infinity, alignment: .leading)
-                SCTable(
+                SBTable(
                     items: items.map(\.id),
                     provider: { id in  items.first { $0.id == id } },
                     columns: {
-                        SCTableColumn("Name") { $0.name }
+                        SBTableColumn("Name") { $0.name }
                             .set(\.width, 159)
                             .set(\.sortComparator, .keyPath(\.name))
-                        SCTableColumn("Code") { String($0.code) }
+                        SBTableColumn("Code") { String($0.code) }
                     },
                     onSort: {
                         guard let pred = $0.first else { return }
@@ -342,10 +341,7 @@ struct SCTableView_Previews: PreviewProvider {
         }
     }
     
-    static var previews: some View {
-        Foo()
-    }
+    return Foo()
 }
-#endif
 
 #endif

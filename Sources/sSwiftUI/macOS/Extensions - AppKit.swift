@@ -25,14 +25,14 @@
 import AppKit
 
 extension NSWindow {
-    public var scAnimator: SCProxy { .init(window: self) }
+    public var scAnimator: SBProxy { .init(window: self) }
     
-    public struct SCProxy {
+    public struct SBProxy {
         fileprivate let window: NSWindow
     }
 }
 
-extension NSWindow.SCProxy {
+extension NSWindow.SBProxy {
     public func shake(number: Int = 3, duration: Double = 0.4, vigour: CGFloat = 0.04) {
         let frame = window.frame
         
@@ -56,14 +56,14 @@ extension NSWindow.SCProxy {
 }
 
 extension NSImage {
-    public var sc: SCProxy { .init(image: self) }
+    public var sc: SBProxy { .init(image: self) }
     
-    public struct SCProxy {
+    public struct SBProxy {
         fileprivate let image: NSImage
     }
 }
     
-extension NSImage.SCProxy {
+extension NSImage.SBProxy {
     public func imageWithInsets(inset: CGFloat, absolute: Bool) -> NSImage {
         imageWithInsets(size: CGSize(width: inset, height: inset), absolute: absolute)
     }

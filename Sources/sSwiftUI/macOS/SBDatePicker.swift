@@ -25,7 +25,7 @@
 import SpellbookFoundation
 import SwiftUI
 
-public struct SCDatePicker: View {
+public struct SBDatePicker: View {
     fileprivate var datePickerStyle: NSDatePicker.Style
     fileprivate var datePickerElements: NSDatePicker.ElementFlags
     fileprivate let datePickerMode: NSDatePicker.Mode
@@ -61,14 +61,14 @@ public struct SCDatePicker: View {
     }
     
     public var body: some View {
-        _SCDatePicker(rep: self)
+        _DatePicker(rep: self)
     }
 }
 
-extension SCDatePicker: ObjectBuilder {}
+extension SBDatePicker: ObjectBuilder {}
 
-private struct _SCDatePicker: NSViewRepresentable {
-    let rep: SCDatePicker
+private struct _DatePicker: NSViewRepresentable {
+    let rep: SBDatePicker
     
     func makeNSView(context: Context) -> NSDatePicker {
         let picker = NSDatePicker(frame: .zero)
@@ -136,16 +136,12 @@ private class Coordinator: NSObject {
     }
 }
 
-#if DEBUG
-struct SCDatePicker_Previews: PreviewProvider {
-    static var previews: some View {
-        SCDatePicker(
-            style: .clockAndCalendar,
-            elements: .yearMonthDay,
-            selection: .constant(Date()...Date().addingTimeInterval(500000))
-        )
-    }
+#Preview {
+    SBDatePicker(
+        style: .clockAndCalendar,
+        elements: .yearMonthDay,
+        selection: .constant(Date()...Date().addingTimeInterval(500000))
+    )
 }
-#endif
 
 #endif

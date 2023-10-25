@@ -27,17 +27,17 @@ import Foundation
 import SwiftUI
 
 extension View {
-    public func visualEffect(
+    public func sbVisualEffect(
         material: NSVisualEffectView.Material,
         blendingMode: NSVisualEffectView.BlendingMode,
         state: NSVisualEffectView.State = .active
     ) -> some View {
-        let view = VisualEffectView(material: material, blendingMode: blendingMode, state: state)
+        let view = SBVisualEffectView(material: material, blendingMode: blendingMode, state: state)
         return background(view.ignoresSafeArea())
     }
 }
 
-public struct VisualEffectView: NSViewRepresentable {
+public struct SBVisualEffectView: NSViewRepresentable {
     public var material: NSVisualEffectView.Material
     public var blendingMode: NSVisualEffectView.BlendingMode
     public var state: NSVisualEffectView.State

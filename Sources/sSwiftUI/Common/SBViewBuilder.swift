@@ -57,4 +57,9 @@ extension View {
             `else`(self)
         }
     }
+    
+    @ViewBuilder
+    func scDecorate(@ViewBuilder _ decorator: (Self) -> some View) -> some View {
+        decorator(self)
+    }
 }

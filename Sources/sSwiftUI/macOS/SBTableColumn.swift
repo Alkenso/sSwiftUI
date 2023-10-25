@@ -24,12 +24,12 @@ import Foundation
 import SpellbookFoundation
 import SwiftUI
 
-public struct SCTableColumn<T> {
+public struct SBTableColumn<T> {
     internal let id = UUID()
     
     public var title: String
     public var width: Width?
-    public var sortComparator: SCSortComparator<T>?
+    public var sortComparator: SBSortComparator<T>?
     public let view: (T) -> AnyView
     
     public init<Content: View>(_ title: String, @ViewBuilder view: @escaping (T) -> Content) {
@@ -51,9 +51,9 @@ public struct SCTableColumn<T> {
     }
 }
 
-extension SCTableColumn: ObjectBuilder {}
+extension SBTableColumn: ObjectBuilder {}
 
-extension SCTableColumn {
+extension SBTableColumn {
     public init<S: StringProtocol>(_ title: String, text: @escaping (T) -> S) {
         self.init(title) {
             let value = text($0)
@@ -67,32 +67,32 @@ extension SCTableColumn {
 }
 
 @resultBuilder
-public struct SCTableColumnBuilder<T> {
-    public static func buildBlock(_ columns: [SCTableColumn<T>]...) -> [SCTableColumn<T>] {
+public struct SBTableColumnBuilder<T> {
+    public static func buildBlock(_ columns: [SBTableColumn<T>]...) -> [SBTableColumn<T>] {
         columns.flatMap { $0 }
     }
     
-    public static func buildOptional(_ component: [SCTableColumn<T>]?) -> [SCTableColumn<T>] {
+    public static func buildOptional(_ component: [SBTableColumn<T>]?) -> [SBTableColumn<T>] {
         component ?? []
     }
     
-    public static func buildEither(first: [SCTableColumn<T>]) -> [SCTableColumn<T>] {
+    public static func buildEither(first: [SBTableColumn<T>]) -> [SBTableColumn<T>] {
         first
     }
 
-    public static func buildEither(second: [SCTableColumn<T>]) -> [SCTableColumn<T>] {
+    public static func buildEither(second: [SBTableColumn<T>]) -> [SBTableColumn<T>] {
         second
     }
 
-    public static func buildArray(_ components: [[SCTableColumn<T>]]) -> [SCTableColumn<T>] {
+    public static func buildArray(_ components: [[SBTableColumn<T>]]) -> [SBTableColumn<T>] {
         components.flatMap { $0 }
     }
 
-    public static func buildExpression(_ column: SCTableColumn<T>) -> [SCTableColumn<T>] {
+    public static func buildExpression(_ column: SBTableColumn<T>) -> [SBTableColumn<T>] {
         [column]
     }
     
-    public static func buildLimitedAvailability(_ component: [SCTableColumn<T>]) -> [SCTableColumn<T>] {
+    public static func buildLimitedAvailability(_ component: [SBTableColumn<T>]) -> [SBTableColumn<T>] {
         component
     }
 }
