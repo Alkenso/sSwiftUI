@@ -44,10 +44,6 @@ extension View {
     public func radioGroupItem(@ViewBuilder label: @escaping () -> some View) -> some View {
         modifier(RadioGroupItem(label: label))
     }
-    
-    public func radioGroupDisabledOpacity(_ opacity: Double) -> some View {
-        environment(\.radioGroupDisabledOpacity, opacity)
-    }
 }
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
@@ -56,7 +52,6 @@ private struct RadioGroupItem<Label: View>: ViewModifier {
 
     @Environment(\.radioGroupSelection) var selection
     @Environment(\.sbTag) var tag
-    @Environment(\.radioGroupDisabledOpacity) var disabledOpacity
     
     @FocusState var isFocused
     
@@ -70,10 +65,9 @@ private struct RadioGroupItem<Label: View>: ViewModifier {
                 .labelsHidden()
                 label()
                     .focused($isFocused)
-                    .disabled(tag == nil)
                     .padding(.leading)
             }
-            .opacity(selection.wrappedValue == tag ? 1.0 : disabledOpacity)
+            .disabled(tag != selection.wrappedValue)
             .contentShape(Rectangle())
             .simultaneousGesture(TapGesture().onEnded {
                 tag.flatMap { selection.wrappedValue = $0 }
@@ -102,17 +96,6 @@ extension EnvironmentValues {
     }
 }
 
-private struct DisabledOpacityEnvironmentKey: EnvironmentKey {
-    static var defaultValue: Double = 1.0
-}
-
-extension EnvironmentValues {
-    fileprivate var radioGroupDisabledOpacity: Double {
-        get { self[DisabledOpacityEnvironmentKey.self] }
-        set { self[DisabledOpacityEnvironmentKey.self] = newValue }
-    }
-}
-
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
 #Preview {
     StatefulPreviewWrapper(1) {
@@ -129,6 +112,5 @@ extension EnvironmentValues {
                 }
                 .sbTag(2)
         }
-        .radioGroupDisabledOpacity(0.5)
     }
 }
