@@ -20,10 +20,12 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //  SOFTWARE.
 
+#if os(macOS)
+
 import SpellbookFoundation
 import SwiftUI
 
-@available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
+@available(macOS 12.0, *)
 public struct RadioGroup<Content: View, Selection: Hashable>: View {
     @Binding private var selection: Selection
     @ViewBuilder let content: () -> Content
@@ -39,14 +41,14 @@ public struct RadioGroup<Content: View, Selection: Hashable>: View {
     }
 }
 
-@available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
+@available(macOS 12.0, *)
 extension View {
     public func radioGroupItem(@ViewBuilder label: @escaping () -> some View) -> some View {
         modifier(RadioGroupItem(label: label))
     }
 }
 
-@available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
+@available(macOS 12.0, *)
 private struct RadioGroupItem<Label: View>: ViewModifier {
     @ViewBuilder let label: () -> Label
 
@@ -96,7 +98,7 @@ extension EnvironmentValues {
     }
 }
 
-@available(iOS 15.0, macOS 12.0, tvOS 15.0, watchOS 8.0, *)
+@available(macOS 12.0, *)
 #Preview {
     StatefulPreviewWrapper(1) {
         RadioGroup(selection: $0) {
@@ -114,3 +116,5 @@ extension EnvironmentValues {
         }
     }
 }
+
+#endif
