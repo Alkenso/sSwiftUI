@@ -34,7 +34,7 @@ public struct ConstStateView<T: Equatable, Content: View>: View {
     }
     
     public var body: some View {
-        content($state)
+        content(.init(get: { initial }, set: { state = $0 }))
             .onChange(of: state, perform: { value in
                 guard value != initial else { return }
                 DispatchQueue.main.async { state = initial }
