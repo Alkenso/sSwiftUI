@@ -27,8 +27,8 @@ import SwiftUI
 
 extension View {
     @available(macOS 12.0, *)
-    public func sbOnEvent(type: NSEvent.EventTypeMask, action: @escaping (NSEvent) -> NSEvent?) -> some View {
-        NSEventMonitorView(content: self, type: type, action: action)
+    public func sbOnEvent(type: NSEvent.EventTypeMask, whenFocused: Bool = true, action: @escaping (NSEvent) -> NSEvent?) -> some View {
+        NSEventMonitorView(content: self, type: type, whenFocused: whenFocused, action: action)
     }
 }
 
@@ -39,6 +39,7 @@ private struct NSEventMonitorView<Content: View>: View {
     
     let content: Content
     let type: NSEvent.EventTypeMask
+    let whenFocused: Bool
     let action: (NSEvent) -> NSEvent?
     
     var body: some View {
@@ -56,7 +57,7 @@ private struct NSEventMonitorView<Content: View>: View {
     
     private func subscribe() {
         subscription = NSEvent.addLocalMonitorForEvents(matching: type) {
-            guard isFocused else { return $0 }
+            guard !whenFocused || isFocused else { return $0 }
             return action($0)
         }
     }
