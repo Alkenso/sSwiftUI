@@ -65,7 +65,7 @@ public struct SBDatePicker: View {
     }
 }
 
-extension SBDatePicker: ObjectBuilder {}
+extension SBDatePicker: ValueBuilder {}
 
 private struct _DatePicker: NSViewRepresentable {
     let rep: SBDatePicker
