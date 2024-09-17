@@ -53,7 +53,7 @@ public struct SBTableColumn<T> {
     }
 }
 
-extension SBTableColumn: ObjectBuilder {}
+extension SBTableColumn: ValueBuilder {}
 
 extension SBTableColumn {
     public init<S: StringProtocol>(_ title: String, text: @escaping (T) -> S) {

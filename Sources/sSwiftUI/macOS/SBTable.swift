@@ -78,7 +78,7 @@ extension SBTable {
     }
 }
 
-extension SBTable: ObjectBuilder {}
+extension SBTable: ValueBuilder {}
 
 extension SBTable {
     fileprivate enum Items {
@@ -134,7 +134,7 @@ private struct _TableImpl<T: Identifiable>: NSViewRepresentable {
     }
 }
 
-private class _TableView<T: Identifiable>: NSView, NSTableViewDelegate, NSTableViewDataSource, ObjectBuilder {
+private class _TableView<T: Identifiable>: NSView, NSTableViewDelegate, NSTableViewDataSource, ValueBuilder {
     private let columns: [SBTableColumn<T>]
     private let contextMenu: [KeyValue<NSMenuItem, SBTableContextMenu>]
     private var tableView: NSTableView!
