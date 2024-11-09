@@ -257,9 +257,9 @@ private class _TableView<T: Identifiable>: NSView, NSTableViewDelegate, NSTableV
         let item: T?
         switch items {
         case .direct(let values):
-            item = values[row]
+            item = values[safe: row]
         case .reference(let values, let access):
-            item = access(values[row])
+            item = values[safe: row].flatMap(access)
         }
         guard let item else { return nil }
         let view = NSHostingView(rootView: column.view(item))
@@ -270,7 +270,7 @@ private class _TableView<T: Identifiable>: NSView, NSTableViewDelegate, NSTableV
     func tableViewSelectionDidChange(_ notification: Notification) {
         guard let selection else { return }
         guard let tableView = notification.object as? NSTableView else { return }
-        let ids = Set(tableView.selectedRowIndexes.map { items.ids[$0] })
+        let ids = Set(tableView.selectedRowIndexes.compactMap { items.ids[safe: $0] })
         if selection.wrappedValue != ids {
             selection.wrappedValue = Set(ids)
         }
